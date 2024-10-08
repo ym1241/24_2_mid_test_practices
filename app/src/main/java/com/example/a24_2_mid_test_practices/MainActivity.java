@@ -4,78 +4,87 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Path;
-import android.graphics.Rect;
-import android.graphics.RectF;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
+    final static int LINE = 1, CIRCLE = 2;
+    static int curShape = LINE;
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        menu.add(0, 1, 0, "선 그리기");
+        menu.add(0, 2, 0, "원 그리기");
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()){
+            case 1:
+                curShape = LINE; //선
+                return true;
+            case 2:
+                curShape = CIRCLE; // 원
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(new MyGraphicView(this));
+        setTitle("간단 그림판");
+
     }
     private static class MyGraphicView extends View{
+        int startX = -1, startY = -1, stopX = -1, stopY = -1;
         public MyGraphicView(Context context) {
             super(context);
         }
-
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            switch (event.getAction()){
+                case MotionEvent.ACTION_DOWN:
+                    startX = (int) event.getX();
+                    startY = (int) event.getY();
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                case MotionEvent.ACTION_UP:
+                    stopX = (int) event.getX();
+                    stopY = (int) event.getY();
+                    this.invalidate();
+                    break;
+            }
+            return true;
+        }
         @Override
         protected void onDraw(@NonNull Canvas canvas) {
             super.onDraw(canvas);
             Paint paint = new Paint();
             paint.setAntiAlias(true);
-            paint.setColor(Color.GREEN);
-            canvas.drawLine(20, 20, 600, 20, paint);
-
-            paint.setColor(Color.BLUE);
-            paint.setStrokeWidth(10);
-            canvas.drawLine(20, 60, 600, 60, paint);
-
-            paint.setColor(Color.RED);
-            paint.setStrokeWidth(0);
-
-            paint.setStyle(Paint.Style.FILL);
-            Rect rect1 = new Rect(20, 100, 20 + 200, 100 + 200);
-            canvas.drawRect(rect1, paint);
-
+            paint.setStrokeWidth(5);
             paint.setStyle(Paint.Style.STROKE);
-            Rect rect2 = new Rect(260, 100, 260 + 200, 100 + 200);
-            canvas.drawRect(rect2, paint);
+            paint.setColor(Color.RED);
 
-            RectF rect3 = new RectF(500, 100, 500 + 200, 100 + 200);
-            canvas.drawRoundRect(rect3, 40, 40, paint);
-
-            canvas.drawCircle(120, 440, 100, paint);
-
-            paint.setStrokeWidth(10);
-            Path path1 = new Path();
-            path1.moveTo(20, 580);
-            path1.lineTo(20 + 100, 580 + 100);
-            path1.lineTo(20 + 200, 580);
-            path1.lineTo(20 + 300, 580 + 100);
-            path1.lineTo(20 + 400, 580);
-            canvas.drawPath(path1, paint);
-
-            paint.setStrokeWidth(0);
-            paint.setTextSize(60);
-            canvas.drawText("안드로이드", 20, 780, paint);
-            //Paint.setStrokeCap()
-            //Canvas.drawOval()
-            //Paint.setColor(Color.argb())
-            paint.setColor(Color.BLACK);
-            paint.setStyle(Paint.Style.FILL);
-            RectF rect4 = new RectF(20, 800, 20 + 500, 800 + 120);
-            canvas.drawOval(rect4, paint);
+            switch (curShape){
+                case LINE:
+                    canvas.drawLine(startX, startY, stopX, stopY, paint);
+                    break;
+                case CIRCLE:
+                    int radius = (int) Math.sqrt(Math.pow(stopX - startX, 2)
+                            + Math.pow(stopY - startY, 2));
+                    canvas.drawCircle(startX, startY, radius, paint);
+                    break;
+            }
         }
     }
 }
